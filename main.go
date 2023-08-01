@@ -12,14 +12,17 @@ import (
 
 func main() {
 	addr := flag.String("a", ":2525", "address to listen on")
+	cert := flag.String("c", "cert.pem", "path to certificate file")
+	key := flag.String("k", "key.pem", "path to key file")
+
 	flag.Parse()
 
-	if err := run(*addr); err != nil {
+	if err := run(*addr, *cert, *key); err != nil {
 		log.Fatal(err)
 	}
 }
 
-func run(address string) error {
+func run(address, certpath, keypath string) error {
 	s := smtp.NewServer(&Server{
 		Users: []User{{
 			Name: "testuser",
@@ -30,7 +33,7 @@ func run(address string) error {
 		}},
 	})
 
-	cert, err := tls.LoadX509KeyPair("cert.pem", "key.pem")
+	cert, err := tls.LoadX509KeyPair(certpath, keypath)
 	if err != nil {
 		return errors.Wrap(err, "could not load certificate")
 	}
@@ -38,7 +41,7 @@ func run(address string) error {
 	s.EnableSMTPUTF8 = true
 	s.TLSConfig = &tls.Config{
 		Certificates: []tls.Certificate{cert},
-		ServerName:   "",
+		ServerName:   "eleonora.gay",
 	}
 
 	network := "tcp"

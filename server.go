@@ -6,7 +6,6 @@ import (
 	"net"
 	"strings"
 
-	"github.com/emersion/go-sasl"
 	"github.com/emersion/go-smtp"
 	"github.com/pkg/errors"
 )
@@ -51,7 +50,7 @@ func (s *Server) SendMail(from string, rcpt string, msg io.Reader) error {
 
 	if err := smtp.SendMail(
 		mx[0].Host+":25",
-		sasl.NewAnonymousClient("gothere-client"),
+		nil,
 		from,
 		[]string{rcpt},
 		msg,

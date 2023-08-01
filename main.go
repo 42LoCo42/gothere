@@ -27,8 +27,8 @@ func run(address, certpath, keypath string) error {
 		Users: []User{{
 			Name: "testuser",
 			Aliases: map[string]string{
-				// "alias": "root@eleonora.gay",
-				"alias": "debug",
+				"proton@eleonora.gay": "leonsch@protonmail.com",
+				"debug@eleonora.gay":  "debug",
 			},
 		}},
 	})
@@ -38,6 +38,7 @@ func run(address, certpath, keypath string) error {
 		return errors.Wrap(err, "could not load certificate")
 	}
 
+	s.MaxRecipients = 1
 	s.EnableSMTPUTF8 = true
 	s.TLSConfig = &tls.Config{
 		Certificates: []tls.Certificate{cert},

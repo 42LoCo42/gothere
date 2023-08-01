@@ -12,7 +12,7 @@ import (
 type Session struct {
 	server *Server
 	from   string
-	rcpt   string
+	target string
 }
 
 func (s *Session) AuthPlain(user, pass string) error {
@@ -25,26 +25,27 @@ func (s *Session) Mail(from string, opts *smtp.MailOptions) error {
 	return nil
 }
 
-func (s *Session) Rcpt(rcpt string) error {
-	log.Print("rcpt: ", rcpt)
+func (s *Session) Rcpt(alias string) error {
+	log.Print("rcpt: ", alias)
 
-	user, rcpt, err := s.server.FindAlias(rcpt)
+	user, target, err := s.server.FindAlias(alias)
 	if err != nil {
 		return errors.Wrapf(err, "could not handle rcpt %v", err)
 	}
 
-	s.rcpt = rcpt
-	log.Printf("sending to user %v: %v", user.Name, rcpt)
+	s.target = target
+	log.Printf(
+		"user %v: %v -> %v",
+		user.Name,
+		alias,
+		target,
+	)
 
 	return nil
 }
 
 func (s *Session) Data(r io.Reader) error {
-	if _, err := io.Copy(os.Stdout, r); err != nil {
-		return errors.Wrap(err, "could not receive data")
-	}
-
-	if s.rcpt == "debug" {
+	if s.target == "debug" {
 		if _, err := io.Copy(os.Stdout, r); err != nil {
 			return errors.Wrap(err, "could not copy email to debug output")
 		}
@@ -52,7 +53,7 @@ func (s *Session) Data(r io.Reader) error {
 		return nil
 	}
 
-	if err := s.server.SendMail(s.from, s.rcpt, r); err != nil {
+	if err := s.server.SendMail(s.from, s.target, r); err != nil {
 		return errors.Wrap(err, "could not forward mail")
 	}
 

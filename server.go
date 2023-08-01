@@ -22,9 +22,9 @@ func (s *Server) NewSession(c *smtp.Conn) (smtp.Session, error) {
 
 func (s *Server) FindAlias(name string) (User, string, error) {
 	for _, user := range s.Users {
-		for alias, real := range user.Aliases {
+		for alias, target := range user.Aliases {
 			if alias == name {
-				return user, real, nil
+				return user, target, nil
 			}
 		}
 	}
@@ -33,8 +33,6 @@ func (s *Server) FindAlias(name string) (User, string, error) {
 }
 
 func (s *Server) SendMail(from string, rcpt string, msg io.Reader) error {
-	log.Printf("forwarding from %v to %v", from, rcpt)
-
 	parts := strings.SplitN(rcpt, "@", 2)
 	if len(parts) != 2 {
 		return errors.Errorf("rcpt %v must have exactly one @", rcpt)
@@ -48,8 +46,11 @@ func (s *Server) SendMail(from string, rcpt string, msg io.Reader) error {
 		return errors.Errorf("no MX records found for %v", rcpt)
 	}
 
+	host := strings.TrimSuffix(mx[0].Host, ".") + ":25"
+	log.Printf("connecting to %v", host)
+
 	if err := smtp.SendMail(
-		mx[0].Host+":25",
+		host,
 		nil,
 		from,
 		[]string{rcpt},
@@ -61,6 +62,8 @@ func (s *Server) SendMail(from string, rcpt string, msg io.Reader) error {
 			rcpt,
 		)
 	}
+
+	log.Print("mail successfully sent!")
 
 	return nil
 }

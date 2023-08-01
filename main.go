@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/tls"
 	"flag"
 	"log"
 	"net"
@@ -19,7 +20,26 @@ func main() {
 }
 
 func run(address string) error {
-	s := smtp.NewServer(&Server{})
+	s := smtp.NewServer(&Server{
+		Users: []User{{
+			Name: "testuser",
+			Aliases: map[string]string{
+				// "alias": "root@eleonora.gay",
+				"alias": "debug",
+			},
+		}},
+	})
+
+	cert, err := tls.LoadX509KeyPair("cert.pem", "key.pem")
+	if err != nil {
+		return errors.Wrap(err, "could not load certificate")
+	}
+
+	s.EnableSMTPUTF8 = true
+	s.TLSConfig = &tls.Config{
+		Certificates: []tls.Certificate{cert},
+		ServerName:   "",
+	}
 
 	network := "tcp"
 	pretty := network + "://" + address
